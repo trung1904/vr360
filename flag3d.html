@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mo hinh 3D Cot co Ba Dinh</title>
+    <style>
+      html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #d9efff; }
+      #app { width: 100%; height: 100%; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+      const root = document.getElementById("app");
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.setClearColor(0xd9efff, 1);
+      root.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xd9efff);
+      scene.fog = new THREE.Fog(0xd9efff, 20, 70);
+
+      const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 200);
+      camera.position.set(8.5, 4.8, 9.2);
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.target.set(0, 3.6, 0);
+      controls.enableDamping = true;
+      controls.minDistance = 3.5;
+      controls.maxDistance = 30;
+
+      scene.add(new THREE.HemisphereLight(0xffffff, 0xb7d2a5, 1.1));
+      const sun = new THREE.DirectionalLight(0xffffff, 1.35);
+      sun.position.set(12, 16, 8);
+      scene.add(sun);
+
+      function makeGraniteTexture(baseHex = "#8b4f3a", speckHex = "#5b2f25", lightHex = "#b46d52") {
+        const c = document.createElement("canvas");
+        c.width = 512; c.height = 512;
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = baseHex;
+        ctx.fillRect(0, 0, 512, 512);
+
+        // Tao van hat da granite
+        for (let i = 0; i < 14000; i++) {
+          const x = (Math.random() * 512) | 0;
+          const y = (Math.random() * 512) | 0;
+          const r = Math.random() < 0.15 ? 2 : 1;
+          const t = Math.random();
+          ctx.fillStyle = t > 0.75 ? lightHex : t < 0.32 ? speckHex : "#7a4232";
+          ctx.fillRect(x, y, r, r);
+        }
+        const tex = new THREE.CanvasTexture(c);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(1, 1);
+        return tex;
+      }
+
+      function makePavementTexture() {
+        const c = document.createElement("canvas");
+        c.width = 1024; c.height = 1024;
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = "#d7d7d7";
+        ctx.fillRect(0, 0, 1024, 1024);
+        // noise nhe
+        for (let i = 0; i < 18000; i++) {
+          const x = (Math.random() * 1024) | 0;
+          const y = (Math.random() * 1024) | 0;
+          const v = (180 + (Math.random() * 40) | 0);
+          ctx.fillStyle = `rgb(${v},${v},${v})`;
+          ctx.fillRect(x, y, 1, 1);
+        }
+        // vach gach
+        ctx.strokeStyle = "rgba(120,120,120,0.35)";
+        ctx.lineWidth = 2;
+        const step = 82;
+        for (let x = 0; x <= 1024; x += step) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 1024); ctx.stroke();
+        }
+        for (let y = 0; y <= 1024; y += step) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1024, y); ctx.stroke();
+        }
+        const tex = new THREE.CanvasTexture(c);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(8, 8);
+        return tex;
+      }
+
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(120, 120),
+        new THREE.MeshStandardMaterial({ map: makePavementTexture(), roughness: 0.88, metalness: 0.02 })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      scene.add(ground);
+
+      // De cot co 3 tang nhu anh mau
+      const graniteMain = makeGraniteTexture("#8f4f3a", "#5e2f25", "#ba7458");
+      const graniteDark = makeGraniteTexture("#6f392d", "#4f241c", "#8b4f3a");
+      const baseMat = new THREE.MeshStandardMaterial({ map: graniteMain, roughness: 0.72, metalness: 0.03 });
+      const step1 = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.24, 4.6), baseMat);
+      step1.position.y = 0.12;
+      scene.add(step1);
+      const step2 = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.24, 3.5), baseMat);
+      step2.position.y = 0.36;
+      scene.add(step2);
+      const step3 = new THREE.Mesh(new THREE.BoxGeometry(2.45, 0.26, 2.45), baseMat);
+      step3.position.y = 0.61;
+      scene.add(step3);
+      const plate = new THREE.Mesh(
+        new THREE.BoxGeometry(1.5, 0.1, 1.5),
+        new THREE.MeshStandardMaterial({ map: graniteDark, roughness: 0.7, metalness: 0.04 })
+      );
+      plate.position.y = 0.79;
+      scene.add(plate);
+
+      // Mau cot sang bac hon, giong cot that
+      const steel = new THREE.MeshStandardMaterial({ color: 0xe1e6ed, roughness: 0.32, metalness: 0.55 });
+      const poleH = 8.6;
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, poleH, 32), steel);
+      pole.position.y = poleH / 2 + 0.8;
+      scene.add(pole);
+
+      // Dinh cot dang hinh tru (theo anh tham chieu)
+      const topCap = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.22, 20), steel);
+      topCap.position.y = 0.8 + poleH + 0.11;
+      scene.add(topCap);
+
+      const clamp = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.014, 10, 28), steel);
+      clamp.rotation.x = Math.PI / 2;
+      clamp.position.set(0, pole.position.y + poleH / 2 - 0.8, 0);
+      scene.add(clamp);
+
+      function makeFlagTex() {
+        const c = document.createElement("canvas");
+        c.width = 1024; c.height = 682;
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = "#da251d";
+        ctx.fillRect(0, 0, c.width, c.height);
+        const cx = c.width * 0.5, cy = c.height * 0.5;
+        const outer = c.height * 0.23, inner = outer * 0.38;
+        ctx.fillStyle = "#ffde00";
+        ctx.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const r = i % 2 === 0 ? outer : inner;
+          const a = -Math.PI / 2 + i * Math.PI / 5;
+          const x = cx + Math.cos(a) * r;
+          const y = cy + Math.sin(a) * r;
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        const tex = new THREE.CanvasTexture(c);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        return tex;
+      }
+
+      const flagW = 2.5, flagH = 1.65;
+      const geo = new THREE.PlaneGeometry(flagW, flagH, 120, 80);
+      geo.translate(flagW / 2, 0, 0);
+      const uniforms = {
+        uTime: { value: 0 },
+        uTex: { value: makeFlagTex() },
+        uLightDir: { value: new THREE.Vector3(0.65, 0.7, 0.25).normalize() }
+      };
+      const mat = new THREE.ShaderMaterial({
+        uniforms,
+        side: THREE.DoubleSide,
+        vertexShader: `
+          uniform float uTime;
+          varying vec2 vUv;
+          varying vec3 vN;
+          varying vec3 vP;
+          void main() {
+            vUv = uv;
+            vec3 p = position;
+            float x = clamp(p.x / ${flagW.toFixed(2)}, 0.0, 1.0);
+            float amp = 0.32 * pow(x, 1.35);
+            p.z += amp * (
+              0.58 * sin(p.x * 2.2 - uTime * 2.0 + p.y * 1.1) +
+              0.28 * sin(p.x * 5.8 - uTime * 3.7 - p.y * 2.2) +
+              0.14 * sin(p.x * 11.5 - uTime * 6.8 + p.y * 3.6)
+            );
+            p.y += 0.08 * pow(x, 1.1) * sin(p.x * 2.0 - uTime * 1.6);
+            vec4 wp = modelMatrix * vec4(p, 1.0);
+            vP = wp.xyz;
+            vN = normalize(mat3(modelMatrix) * normal);
+            gl_Position = projectionMatrix * viewMatrix * wp;
+          }
+        `,
+        fragmentShader: `
+          uniform sampler2D uTex;
+          uniform vec3 uLightDir;
+          varying vec2 vUv;
+          varying vec3 vN;
+          varying vec3 vP;
+          void main() {
+            vec3 albedo = texture2D(uTex, vUv).rgb;
+            vec3 N = normalize(vN);
+            vec3 L = normalize(uLightDir);
+            vec3 V = normalize(cameraPosition - vP);
+            float ndl = max(dot(N, L), 0.0);
+            float rim = pow(1.0 - max(dot(N, V), 0.0), 2.0) * 0.18;
+            vec3 color = albedo * (0.48 + 0.82 * ndl) + vec3(rim);
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      });
+      const flag = new THREE.Mesh(geo, mat);
+      // Gan sat cot co, tranh khoang cach
+      // Dua co len cao hon, sat dinh cot hon
+      flag.position.set(0.085, pole.position.y + poleH / 2 - 0.8, 0.0);
+      scene.add(flag);
+
+      const clock = new THREE.Clock();
+      function animate() {
+        requestAnimationFrame(animate);
+        uniforms.uTime.value = clock.getElapsedTime();
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
+  </html>
+

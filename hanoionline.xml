@@ -1,0 +1,165 @@
+﻿<krpano version="1.21" title="Ba Đình Nắng: Sản phẩm báo chí đa phương tiện ứng dụng công nghệ thực tế ảo - Sản xuất bởi Trung tâm Nội dung số - Đài Hà Nội">
+
+    <include url="skin/vtourskin.xml" />
+
+    <plugin name="soundinterface"
+            url="%SWFPATH%/plugins/soundinterface.js"
+            keep="true"
+            bgsound="bg.mp3"
+            bgsoundloops="0"
+            />
+
+    <skin_settings maps="true"
+                   maps_type="google"
+                   maps_bing_api_key=""
+                   maps_google_api_key=""
+                   maps_zoombuttons="false"
+                   maps_loadonfirstuse="true"
+                   gyro="true"
+                   gyro_keeplookingdirection="false"
+                   webvr="true"
+                   webvr_keeplookingdirection="true"
+                   webvr_prev_next_hotspots="true"
+                   autotour="true"
+                   littleplanetintro="false"
+                   followmousecontrol="false"
+                   title="false"
+                   thumbs="false"
+                   thumbs_width="120" thumbs_height="80" thumbs_padding="10" thumbs_crop="0|40|240|160"
+                   thumbs_opened="false"
+                   thumbs_text="false"
+                   thumbs_dragging="true"
+                   thumbs_onhoverscrolling="false"
+                   thumbs_scrollbuttons="false"
+                   thumbs_scrollindicator="false"
+                   thumbs_loop="false"
+                   tooltips_buttons="false"
+                   tooltips_thumbs="false"
+                   tooltips_hotspots="false"
+                   tooltips_mapspots="false"
+                   deeplinking="false"
+                   loadscene_flags="MERGE"
+                   loadscene_blend="OPENBLEND(0.5, 0.0, 0.75, 0.05, linear)"
+                   loadscene_blend_prev="SLIDEBLEND(0.5, 180, 0.75, linear)"
+                   loadscene_blend_next="SLIDEBLEND(0.5, 0, 0.75, linear)"
+                   loadingtext=""
+                   layout_width="100%"
+                   layout_maxwidth="814"
+                   controlbar_width="-24"
+                   controlbar_height="40"
+                   controlbar_offset="20"
+                   controlbar_offset_closed="-40"
+                   controlbar_overlap.no-fractionalscaling="10"
+                   controlbar_overlap.fractionalscaling="0"
+                   design_skin_images="vtourskin.png"
+                   design_bgcolor="0x000071"
+                   design_bgalpha="0.8"
+                   design_bgborder="0"
+                   design_bgroundedge="1"
+                   design_bgshadow="0 4 10 0x000000 0.3"
+                   design_thumbborder_bgborder="3 0xFFFFFF 1.0"
+                   design_thumbborder_padding="2"
+                   design_thumbborder_bgroundedge="0"
+                   design_text_css="color:#FFFFFF; font-family:Arial;"
+                   design_text_shadow="1"
+                   />
+
+    <plugin name="pp_blur" keep="true"
+            url="%VIEWER%/plugins/pp_blur.js"
+            enabled="true"
+            range="0.0"
+            linearrgb="false"
+            order="1"
+            phase="2"
+            />
+
+    <action name="popup" scope="private:POPUP" args="type, content, width, height, scrollbars, onclose_callback"><![CDATA[
+        if(popup, break(); );
+        
+        addlayer('popup_bg', popup_bg);
+        set(popup_bg,
+            type=container,
+            align=lefttop, width=100%, height=100%,
+            zorder=99,
+            handcursor=false,
+            bgcapture=true,
+            capture=false,
+            onclick='resumesound(bgsound); popup_close()'
+        );
+        
+        addlayer('popup', popup);
+        set(popup, type=container, parent='popup_bg', width=calc(min(width,global.stagewidth*0.9)), height=calc(min(height,global.stageheight*0.8)), align=center, bgborder='1 0x555555 1', bgcolor=0x555555, bgalpha=0.7, bgshadow='0 10 20 0x000000 0.5', bgcapture=true, maskchildren=false, capture=true, handcursor=false, alpha=0);
+        
+        if(type == 'iframe',
+            set(popup.type, iframe);
+            copy(popup.iframeurl, content);
+        ,
+        type == 'html',
+            set(popup.type, html);
+            copy(popup.html, content);
+            copy(popup.htmlscrollbars, scrollbars);
+        ,
+        type == 'image',
+            set(popup, bgcolor=0xFFFFFF, bgalpha=1);
+            addlayer("popup_image", img);
+            set(img, url=get(content), align=center, width=-20, height=-20, parent=get(popup.name), onloaded='popup_imageloaded()');
+        );
+
+        tween(global.plugin[pp_blur].range, 40.0);
+        delayedcall(0.2, tween(global.layer[popup].alpha, 1.0); );
+
+        set(global.events[popup].onremovepano, popup_close() );
+    ]]></action>
+    
+    
+    <action name="popup_close" scope="private:POPUP">
+        if (onclose_callback,
+            callback = onclose_callback;
+            onclose_callback = null;
+            scope(global, get(callback) );
+        );
+        
+        set(global.plugin[popup_bg].enabled, false);
+        set(global.events[popup].name, null);
+        tween(global.plugin[pp_blur].range, 0.0);
+        tween(global.layer[popup_bg].bgalpha, 0.0, 0.25);
+        tween(global.layer[popup].alpha, 0.0, 0.25, default,
+            removelayer('popup_bg', true);
+            scope(private:POPUP, delete(popup); );
+        );
+    </action>
+
+    <scene name="scene_Quang-truong-Ba-Dinh" title="BA ĐÌNH NẮNG" onstart="" thumburl="panos/Quang-truong-Ba-Dinh.tiles/thumb.jpg" lat="21.03672886" lng="105.83521917" alt="159.91" heading="0.0">
+        
+        <control bouncinglimits="calc:image.cube ? true : false" />
+        <view hlookat="1447.213" vlookat="10.520" fovtype="MFOV" fov="117.903" maxpixelzoom="2.0" fovmin="70" fovmax="140" limitview="auto" />
+        <preview url="panos/Quang-truong-Ba-Dinh.tiles/preview.jpg" />
+        <image>
+            <cube url="panos/Quang-truong-Ba-Dinh.tiles/%s/l%l/%v/l%l_%s_%v_%h.jpg" multires="512,640,1152,2304,4608" />
+        </image>
+
+        <hotspot name="btn_flag_3d"
+                 type="text"
+                 ath="-172"
+                 atv="8"
+                 distorted="true"
+                 edge="center"
+                 oy="140"
+                 html="3D"
+                 css="font-family:Segoe UI,Arial,sans-serif;font-size:16px;font-weight:bold;color:#FFFFFF;text-align:center;"
+                 bgcolor="0x1a7fe0"
+                 bgalpha="0.98"
+                 bgborder="2 0xFFFFFF 1"
+                 bgroundedge="22"
+                 bgcapture="true"
+                 handcursor="true"
+                 capture="true"
+                 tooltip="Mo hinh 3D cot co"
+                 onclick="openurl(flag3d.html,_blank);"
+                 />
+
+        <include url="%SWFPATH%/skin/lensflare.xml"/>
+        <lensflare_settings editor="false" ath="171.6" atv="-8.8" sun="0.5" glare="0.1" r_ring="0.25" exposure="true" exposure_bias="-0.2"/>
+    </scene>
+
+</krpano>
